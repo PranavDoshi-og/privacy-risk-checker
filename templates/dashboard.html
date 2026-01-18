@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+    <h2>Risk Report</h2>
+
+    <p><strong>Email:</strong> {{ email }}</p>
+    <p><strong>Password Strength:</strong> {{ level }}</p>
+    <p><strong>Risk Score:</strong> {{ score }} / 100</p>
+
+    <p><strong>Data Breach Status:</strong>
+        {% if breached == True %}
+            ⚠️ Breached
+        {% else %}
+            ✅ Safe
+        {% endif %}
+    </p>
+
+</body>
+</html>
