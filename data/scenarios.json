@@ -1,0 +1,115 @@
+{
+  "version": "1.0.0",
+  "description": "User scenario profiles that dynamically adjust category weights and rule multipliers",
+  "scenarios": {
+    "student": {
+      "id": "student",
+      "label": "Student",
+      "icon": "🎓",
+      "description": "College/university student with moderate social media usage and shared devices",
+      "typical_risks": ["shared devices", "public WiFi on campus", "social media oversharing"],
+      "weight_overrides": {
+        "account_security": 0.25,
+        "data_exposure":    0.30,
+        "network_security": 0.22,
+        "device_security":  0.12,
+        "behavioral":       0.11
+      },
+      "rule_multipliers": {
+        "DE01": 1.4,
+        "NS01": 1.3,
+        "BH01": 1.2,
+        "DS04": 1.2
+      },
+      "context_note": "Students frequently use public campus WiFi and share devices, making data exposure and network security higher priority."
+    },
+    "working_professional": {
+      "id": "working_professional",
+      "label": "Working Professional",
+      "icon": "💼",
+      "description": "Corporate employee handling sensitive work data and using banking/finance apps regularly",
+      "typical_risks": ["corporate data leakage", "phishing targeting", "mobile banking exposure"],
+      "weight_overrides": {
+        "account_security": 0.35,
+        "data_exposure":    0.20,
+        "network_security": 0.20,
+        "device_security":  0.18,
+        "behavioral":       0.07
+      },
+      "rule_multipliers": {
+        "AS01": 1.5,
+        "AS02": 1.5,
+        "BH01": 1.4,
+        "DS02": 1.3,
+        "NS01": 1.2
+      },
+      "context_note": "Professionals handle financial and corporate data. Account compromise and phishing attacks are disproportionately costly."
+    },
+    "high_social_media": {
+      "id": "high_social_media",
+      "label": "High Social Media User",
+      "icon": "📱",
+      "description": "Power user on Instagram, TikTok, Twitter/X with large follower base and public presence",
+      "typical_risks": ["identity theft via public info", "doxing", "app permission abuse"],
+      "weight_overrides": {
+        "account_security": 0.28,
+        "data_exposure":    0.38,
+        "network_security": 0.12,
+        "device_security":  0.12,
+        "behavioral":       0.10
+      },
+      "rule_multipliers": {
+        "DE01": 1.6,
+        "DE03": 1.5,
+        "DE04": 1.4,
+        "BH02": 1.4,
+        "AS01": 1.2
+      },
+      "context_note": "Public social media presence dramatically increases risk of targeted social engineering, identity theft, and doxing attacks."
+    },
+    "senior_citizen": {
+      "id": "senior_citizen",
+      "label": "Senior Citizen",
+      "icon": "👴",
+      "description": "Older adult using internet primarily for communication, banking, and shopping",
+      "typical_risks": ["phishing susceptibility", "tech support scams", "weak passwords"],
+      "weight_overrides": {
+        "account_security": 0.30,
+        "data_exposure":    0.20,
+        "network_security": 0.15,
+        "device_security":  0.15,
+        "behavioral":       0.20
+      },
+      "rule_multipliers": {
+        "BH01": 1.8,
+        "AS03": 1.4,
+        "AS01": 1.3,
+        "DS02": 1.3,
+        "DS03": 1.2
+      },
+      "context_note": "Senior citizens are disproportionately targeted by phishing and tech-support scams. Behavioral security is weighted higher."
+    },
+    "developer": {
+      "id": "developer",
+      "label": "Software Developer",
+      "icon": "💻",
+      "description": "Tech professional managing code repositories, API keys, and cloud infrastructure",
+      "typical_risks": ["credential leakage in code", "SSH key exposure", "cloud misconfiguration"],
+      "weight_overrides": {
+        "account_security": 0.35,
+        "data_exposure":    0.22,
+        "network_security": 0.18,
+        "device_security":  0.20,
+        "behavioral":       0.05
+      },
+      "rule_multipliers": {
+        "AS01": 1.6,
+        "AS02": 1.5,
+        "DE05": 1.5,
+        "DS01": 1.4,
+        "DS04": 1.3
+      },
+      "context_note": "Developers often have access to sensitive infrastructure. A compromised account can affect entire systems and teams."
+    }
+  }
+}

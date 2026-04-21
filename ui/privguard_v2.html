@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrivGuard v2 — Personal Privacy Risk Checker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;500;600;700&family=Bebas+Neue&display=swap');
+:root{
+  --bg:#07070d;--s1:#0d0d18;--s2:#13131f;--s3:#1a1a2a;--s4:#22223a;
+  --bd:rgba(255,255,255,0.06);--bd2:rgba(255,255,255,0.11);--bd3:rgba(255,255,255,0.18);
+  --tx:#e8e8f5;--tx2:#8a8aaa;--tx3:#4a4a6a;
+  --a:#6c63ff;--a2:#9d96ff;--ag:rgba(108,99,255,0.12);
+  --cr:#ff2d55;--hi:#ff6b1a;--me:#f5c518;--lo:#1bde7a;
+  --crb:rgba(255,45,85,0.12);--hib:rgba(255,107,26,0.12);--meb:rgba(245,197,24,0.12);--lob:rgba(27,222,122,0.12);
+  --fn:'Space Grotesk',sans-serif;--fm:'IBM Plex Mono',monospace;--fd:'Bebas Neue',sans-serif;
+  --r:8px;--r2:14px;--r3:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:var(--fn);font-size:15px;line-height:1.6;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 60% 40% at 20% 20%,rgba(108,99,255,0.05) 0%,transparent 70%),
+             radial-gradient(ellipse 50% 50% at 80% 80%,rgba(27,222,122,0.03) 0%,transparent 70%);
+  pointer-events:none}
+#root{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:0 1.25rem}
+
+/* ── NAV ── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 0;border-bottom:1px solid var(--bd2);margin-bottom:0;position:sticky;top:0;background:rgba(7,7,13,0.92);backdrop-filter:blur(16px);z-index:200}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--fd);font-size:1.4rem;letter-spacing:0.05em}
+.logo-dot{width:8px;height:8px;background:var(--a);border-radius:50%;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.nav-right{display:flex;align-items:center;gap:6px}
+.tab{padding:7px 14px;background:transparent;border:1px solid transparent;border-radius:var(--r);
+  font-family:var(--fm);font-size:11px;color:var(--tx3);cursor:pointer;transition:all 0.15s}
+.tab:hover{color:var(--tx2);border-color:var(--bd2)}
+.tab.active{background:var(--ag);border-color:rgba(108,99,255,0.3);color:var(--a2)}
+.v-badge{font-family:var(--fm);font-size:10px;color:var(--tx3);padding:4px 10px;border:1px solid var(--bd);border-radius:20px}
+
+/* ── VIEWS ── */
+.view{display:none}.view.active{display:block}
+
+/* ── HERO ── */
+.hero{padding:3.5rem 0 2rem;text-align:center}
+.hero-chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--fm);font-size:11px;
+  color:var(--a2);background:var(--ag);border:1px solid rgba(108,99,255,0.2);
+  padding:5px 14px;border-radius:20px;margin-bottom:1.5rem}
+.hero-chip::before{content:'';width:6px;height:6px;background:var(--lo);border-radius:50%;animation:blink 2s infinite}
+h1{font-family:var(--fd);font-size:clamp(2.4rem,6vw,4rem);letter-spacing:0.04em;line-height:1.05;margin-bottom:0.8rem}
+h1 em{font-style:normal;color:var(--a2)}
+.hero-sub{color:var(--tx2);font-size:0.95rem;max-width:520px;margin:0 auto 2rem}
+
+/* ── SCENARIO PICKER ── */
+.section-head{font-family:var(--fm);font-size:11px;color:var(--tx3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.75rem;display:flex;align-items:center;gap:8px}
+.section-head::after{content:'';flex:1;height:1px;background:var(--bd)}
+.scenario-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:8px;margin-bottom:1.5rem}
+.scenario-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:1rem;cursor:pointer;transition:all 0.15s;text-align:center}
+.scenario-card:hover{border-color:var(--bd2);background:var(--s2)}
+.scenario-card.selected{border-color:var(--a);background:var(--ag)}
+.sc-icon{font-size:1.8rem;margin-bottom:6px}
+.sc-label{font-size:0.82rem;font-weight:500;margin-bottom:4px}
+.sc-desc{font-size:0.75rem;color:var(--tx3);line-height:1.4}
+.scenario-note{background:var(--s2);border:1px solid var(--bd);border-left:3px solid var(--a);
+  border-radius:var(--r);padding:0.85rem 1rem;font-size:0.85rem;color:var(--tx2);margin-bottom:1.5rem;display:none}
+
+/* ── NAME + OPTIONS ── */
+.top-form{background:var(--s1);border:1px solid var(--bd2);border-radius:var(--r2);padding:1.5rem;margin-bottom:1rem}
+.form-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.field{flex:1;min-width:160px}
+label.lbl{display:block;font-family:var(--fm);font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
+input[type=text]{width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:var(--r);
+  padding:11px 14px;font-family:var(--fn);font-size:14px;color:var(--tx);outline:none;transition:border-color 0.2s}
+input[type=text]:focus{border-color:var(--a)}
+input[type=text]::placeholder{color:var(--tx3)}
+.toggle-row{display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--tx2);cursor:pointer;user-select:none}
+.toggle{width:36px;height:20px;background:var(--s4);border:1px solid var(--bd2);border-radius:10px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0}
+.toggle.on{background:var(--a)}
+.toggle::after{content:'';position:absolute;width:14px;height:14px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left 0.2s}
+.toggle.on::after{left:20px}
+
+/* ── QUESTIONS ── */
+.cat-block{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);margin-bottom:8px;overflow:hidden;transition:border-color 0.2s}
+.cat-block:hover{border-color:var(--bd2)}
+.cat-block.open{border-color:var(--bd3)}
+.cat-hdr{padding:1.1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.cat-left{display:flex;align-items:center;gap:12px}
+.cat-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.cat-nm{font-weight:600;font-size:0.9rem}
+.cat-meta{font-family:var(--fm);font-size:10px;color:var(--tx3);margin-top:2px}
+.cat-right{display:flex;align-items:center;gap:10px}
+.prog-wrap{width:70px;height:3px;background:var(--s4);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;background:var(--a);transition:width 0.4s}
+.prog-txt{font-family:var(--fm);font-size:10px;color:var(--tx3)}
+.chev{font-size:11px;color:var(--tx3);transition:transform 0.2s}
+.cat-block.open .chev{transform:rotate(180deg)}
+.q-panel{display:none;border-top:1px solid var(--bd)}
+.cat-block.open .q-panel{display:block}
+.q-item{padding:1.1rem 1.5rem;border-bottom:1px solid var(--bd)}
+.q-item:last-child{border-bottom:none}
+.q-text{display:flex;align-items:flex-start;gap:8px;margin-bottom:0.85rem;font-size:0.88rem}
+.qid{font-family:var(--fm);font-size:10px;color:var(--tx3);flex-shrink:0;margin-top:2px}
+.sev{font-family:var(--fm);font-size:10px;padding:2px 7px;border-radius:4px;margin-left:auto;flex-shrink:0;margin-top:1px}
+.sev-critical{background:var(--crb);color:var(--cr)}.sev-high{background:var(--hib);color:var(--hi)}
+.sev-medium{background:var(--meb);color:var(--me)}.sev-low{background:var(--lob);color:var(--lo)}
+.bool-row{display:flex;gap:8px}
+.bb{flex:1;padding:9px;background:var(--s3);border:1px solid var(--bd);border-radius:var(--r);color:var(--tx3);font-size:13px;cursor:pointer;transition:all 0.15s}
+.bb:hover{border-color:var(--bd2);color:var(--tx)}
+.bb.sel-y{background:var(--crb);border-color:var(--cr);color:var(--cr)}
+.bb.sel-n{background:var(--lob);border-color:var(--lo);color:var(--lo)}
+select.csel{width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:var(--r);
+  padding:10px 14px;font-family:var(--fn);font-size:13px;color:var(--tx);outline:none;cursor:pointer;
+  appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%234a4a6a' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;transition:border-color 0.2s}
+select.csel:focus{border-color:var(--a)}
+
+/* ── STICKY LIVE SCORE ── */
+#sticky{position:fixed;bottom:1.25rem;right:1.25rem;background:var(--s1);
+  border:1px solid var(--bd2);border-radius:var(--r2);padding:0.9rem 1.1rem;min-width:145px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.6);z-index:300;display:none}
+.sk-lbl{font-family:var(--fm);font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:3px}
+.sk-val{font-family:var(--fd);font-size:2.2rem;line-height:1}
+.sk-lvl{font-family:var(--fm);font-size:10px;margin-top:3px}
+.sk-bar{margin-top:7px;height:2px;background:var(--s4);border-radius:2px;overflow:hidden}
+.sk-fill{height:100%;border-radius:2px;transition:width 0.4s,background 0.4s}
+
+/* ── CTA ── */
+.cta{text-align:center;padding:2rem 0}
+.btn-primary{background:var(--a);color:#fff;border:none;border-radius:var(--r);
+  padding:13px 44px;font-family:var(--fn);font-size:0.95rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn-primary:hover{background:var(--a2);transform:translateY(-1px)}
+.btn-primary:active{transform:none}
+.btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--bd2);border-radius:var(--r);
+  padding:10px 24px;font-family:var(--fn);font-size:0.88rem;cursor:pointer;transition:all 0.2s;display:inline-block;margin-top:0.5rem}
+.btn-ghost:hover{border-color:var(--a);color:var(--a2)}
+
+/* ── RESULTS ── */
+#view-results{padding-bottom:4rem}
+.res-hero{background:var(--s1);border:1px solid var(--bd2);border-radius:var(--r2);padding:2rem;margin-bottom:1rem;text-align:center;position:relative;overflow:hidden}
+.res-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--score-glow,rgba(108,99,255,0.08)) 0%,transparent 70%);pointer-events:none}
+.res-name{font-family:var(--fm);font-size:11px;color:var(--tx3);margin-bottom:1rem}
+.big-num{font-family:var(--fd);font-size:5.5rem;line-height:1;margin-bottom:0.4rem}
+.big-lvl{display:inline-block;font-family:var(--fm);font-size:0.88rem;padding:5px 18px;border-radius:20px;margin-bottom:1rem}
+.grade-ring{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;font-family:var(--fd);font-size:1.6rem;margin-bottom:4px}
+.grade-hint{font-family:var(--fm);font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:0.1em}
+
+/* Scenario badge */
+.scenario-badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--fm);font-size:11px;
+  color:var(--a2);background:var(--ag);border:1px solid rgba(108,99,255,0.2);
+  padding:4px 12px;border-radius:20px;margin-top:0.75rem}
+.base-delta{font-family:var(--fm);font-size:11px;color:var(--tx3);margin-top:4px}
+
+/* ── STAT CARDS ── */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1rem}
+.stat-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:1.1rem;text-align:center}
+.stat-v{font-family:var(--fd);font-size:2rem;line-height:1}
+.stat-l{font-family:var(--fm);font-size:10px;color:var(--tx2);margin-top:4px;text-transform:uppercase;letter-spacing:0.06em}
+
+/* ── COMPARISON BANNER ── */
+.compare-banner{border-radius:var(--r2);padding:1.1rem 1.5rem;margin-bottom:1rem;display:flex;align-items:center;gap:14px}
+.cmp-icon{font-size:1.8rem}
+.cmp-text{flex:1}
+.cmp-title{font-weight:600;font-size:0.9rem;margin-bottom:2px}
+.cmp-sub{font-size:0.82rem;color:var(--tx2)}
+.cmp-delta{font-family:var(--fd);font-size:2rem;line-height:1}
+
+/* ── TREND PANEL ── */
+.trend-panel{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:1.25rem 1.5rem;margin-bottom:1rem}
+.trend-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.trend-lbl{font-family:var(--fm);font-size:12px;padding:4px 12px;border-radius:6px}
+.mini-chart{display:flex;align-items:flex-end;gap:4px;height:60px;margin-top:8px}
+.bar-c{flex:1;border-radius:3px 3px 0 0;transition:height 0.4s ease;min-height:4px;position:relative;cursor:help}
+.bar-c:hover::after{content:attr(data-val);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
+  background:var(--s4);color:var(--tx);font-family:var(--fm);font-size:10px;padding:3px 7px;border-radius:4px;white-space:nowrap;margin-bottom:4px}
+.trend-cats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:1rem}
+.tcat-row{display:flex;align-items:center;gap:8px;font-size:0.8rem}
+.tcat-arrow{font-size:0.9rem;flex-shrink:0}
+.tcat-name{flex:1;color:var(--tx2)}
+.tcat-delta{font-family:var(--fm);font-size:11px}
+
+/* ── LIVE SIMULATION ── */
+.sim-panel{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);margin-bottom:1rem;overflow:hidden}
+.sim-hdr{padding:1rem 1.5rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.sim-title{font-weight:600;font-size:0.9rem;display:flex;align-items:center;gap:8px}
+.sim-live-dot{width:7px;height:7px;background:var(--lo);border-radius:50%;animation:blink 1.5s infinite}
+.sim-score-change{font-family:var(--fd);font-size:1.6rem}
+.event-row{padding:0.85rem 1.5rem;border-bottom:1px solid var(--bd);display:flex;align-items:flex-start;gap:12px;font-size:0.85rem}
+.event-row:last-child{border-bottom:none}
+.ev-icon{font-size:1.2rem;flex-shrink:0;margin-top:1px}
+.ev-info{flex:1}
+.ev-label{font-weight:500;margin-bottom:2px}
+.ev-desc{color:var(--tx2);font-size:0.8rem}
+.ev-mitigation{color:var(--a2);font-size:0.78rem;margin-top:3px}
+.ev-delta{font-family:var(--fm);font-size:12px;flex-shrink:0}
+.ev-arrow{display:flex;align-items:center;gap:4px;font-family:var(--fm);font-size:10px;color:var(--tx3);margin-top:2px}
+
+/* ── CAT BREAKDOWN ── */
+.cat-bd{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:1.25rem 1.5rem;margin-bottom:1rem}
+.catb-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--bd)}
+.catb-row:last-child{border-bottom:none}
+.catb-nm{flex:1;font-size:0.88rem;color:var(--tx2)}
+.catb-bar{width:120px;height:5px;background:var(--s4);border-radius:3px;overflow:hidden}
+.catb-fill{height:100%;border-radius:3px;transition:width 0.7s ease}
+.catb-val{font-family:var(--fm);font-size:12px;min-width:36px;text-align:right}
+.catb-w{font-family:var(--fm);font-size:10px;color:var(--tx3);min-width:32px;text-align:right}
+.catb-changed{font-family:var(--fm);font-size:9px;color:var(--a2);background:var(--ag);padding:1px 6px;border-radius:4px;margin-left:4px}
+
+/* ── CHART PANEL ── */
+.chart-panel{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:1.25rem 1.5rem;margin-bottom:1rem}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.chart-box{position:relative}
+canvas{max-width:100%;height:200px!important}
+
+/* ── RECOMMENDATIONS ── */
+.rec-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);margin-bottom:8px;overflow:hidden;cursor:pointer;transition:border-color 0.15s}
+.rec-card:hover{border-color:var(--bd2)}
+.rec-hdr{padding:1rem 1.5rem;display:flex;align-items:center;gap:10px}
+.rec-pri{font-family:var(--fm);font-size:10px;padding:3px 9px;border-radius:4px;flex-shrink:0}
+.rec-ttl{flex:1;font-weight:500;font-size:0.88rem}
+.rec-chev{font-size:11px;color:var(--tx3);transition:transform 0.2s}
+.rec-card.open .rec-chev{transform:rotate(180deg)}
+.rec-body{display:none;padding:0 1.5rem 1.25rem}
+.rec-card.open .rec-body{display:block}
+.rec-short{color:var(--tx2);font-size:0.85rem;margin-bottom:0.85rem}
+.rec-steps{list-style:none;margin-bottom:0.85rem}
+.rec-steps li{display:flex;gap:8px;font-size:0.83rem;color:var(--tx2);padding:5px 0;border-bottom:1px solid var(--bd)}
+.rec-steps li:last-child{border-bottom:none}
+.snum{font-family:var(--fm);font-size:10px;color:var(--a2);flex-shrink:0;margin-top:2px}
+.tools{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:0.75rem}
+.tool{background:var(--s3);border:1px solid var(--bd);border-radius:4px;padding:2px 9px;font-family:var(--fm);font-size:10px;color:var(--tx2)}
+.rec-meta{font-family:var(--fm);font-size:10px;color:var(--tx3);display:flex;gap:14px;flex-wrap:wrap}
+
+/* ── RESOURCES ── */
+.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:8px;margin-bottom:2rem}
+.res-a{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:0.9rem;text-decoration:none;display:block;transition:border-color 0.15s}
+.res-a:hover{border-color:var(--a)}
+.res-nm{color:var(--tx);font-size:0.85rem;font-weight:500;margin-bottom:3px}
+.res-d{color:var(--tx3);font-size:0.78rem}
+
+/* ── ADMIN ── */
+#view-admin{padding-top:1.5rem;padding-bottom:4rem}
+.admin-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:1.25rem;margin-bottom:1rem}
+.admin-card h3{font-family:var(--fm);font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1rem}
+.sess-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bd);font-size:0.85rem}
+.sess-row:last-child{border-bottom:none}
+.sess-score{font-family:var(--fm);font-size:13px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.animate-in{animation:fadeUp 0.4s ease forwards}
+@media(max-width:600px){h1{font-size:2.2rem}.chart-row{grid-template-columns:1fr}.trend-cats{grid-template-columns:1fr}#sticky{bottom:0.75rem;right:0.75rem}}
+</style>
+</head>
+<body>
+<div id="root">
+
+<!-- NAV -->
+<nav>
+  <div class="logo"><div class="logo-dot"></div>PRIVGUARD<span style="color:var(--a2);font-size:1rem"> v2</span></div>
+  <div class="nav-right">
+    <span class="v-badge">Engine 2.1 / UI 2.0</span>
+    <button class="tab active" id="t-check" onclick="switchView('checker')">Checker</button>
+    <button class="tab" id="t-admin" onclick="switchView('admin')">Analytics</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════
+     VIEW: CHECKER
+══════════════════════════════════ -->
+<div class="view active" id="view-checker">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-chip">Live Threat Engine · Scenario Mode · Trend Analysis</div>
+    <h1>HOW EXPOSED<br>IS YOUR <em>PRIVACY?</em></h1>
+    <p class="hero-sub">21 questions · 5 risk categories · scenario-aware scoring · real-time threat simulation</p>
+  </div>
+
+  <!-- FORM -->
+  <div id="form-section">
+
+    <!-- SCENARIO PICKER -->
+    <div class="section-head">Select Your Profile</div>
+    <div class="scenario-grid" id="scenario-grid"></div>
+    <div class="scenario-note" id="scenario-note"></div>
+
+    <!-- NAME + OPTIONS -->
+    <div class="top-form">
+      <div class="form-row">
+        <div class="field">
+          <label class="lbl">Your Name</label>
+          <input type="text" id="uname" placeholder="e.g. Aryan Sharma" maxlength="60">
+        </div>
+        <div class="field" style="flex:0;min-width:180px">
+          <label class="lbl">Options</label>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:2px">
+            <label class="toggle-row"><div class="toggle on" id="tog-sim" onclick="toggleSim()"></div>Simulate live events</label>
+            <label class="toggle-row"><div class="toggle on" id="tog-hist" onclick="toggleHist()"></div>Track history</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUESTIONS -->
+    <div id="q-container"></div>
+
+    <div class="cta">
+      <button class="btn-primary" onclick="runAnalysis()">Run Risk Analysis →</button><br>
+      <span style="font-family:var(--fm);font-size:11px;color:var(--tx3);margin-top:0.5rem;display:block">Answer at least 11 questions for accurate results</span>
+    </div>
+  </div>
+
+  <!-- RESULTS (hidden until analysis) -->
+  <div id="view-results" style="display:none"></div>
+
+</div><!-- end view-checker -->
+
+<!-- ══════════════════════════════════
+     VIEW: ADMIN
+══════════════════════════════════ -->
+<div class="view" id="view-admin"></div>
+
+</div><!-- end root -->
+
+<!-- STICKY SCORE -->
+<div id="sticky">
+  <div class="sk-lbl">Live Risk Score</div>
+  <div class="sk-val" id="sk-num">0</div>
+  <div class="sk-lvl" id="sk-lvl" style="color:var(--lo)">LOW RISK</div>
+  <div class="sk-bar"><div class="sk-fill" id="sk-fill" style="width:0%;background:var(--lo)"></div></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+/* ══════════════════════════════════════
+   DATA MODEL (mirrors JSON files)
+══════════════════════════════════════ */
+const RULES={version:"2.1.0",categories:{
+  account_security:{label:"Account Security",weight:0.30,icon:"🔐",color:"#6c63ff",rules:[
+    {id:"AS01",name:"Reused Passwords",question:"Do you reuse passwords across multiple accounts?",type:"boolean",score_if_true:25,score_if_false:0,severity:"critical"},
+    {id:"AS02",name:"Two-Factor Auth",question:"Do you use 2FA on email/banking?",type:"boolean",score_if_true:0,score_if_false:20,severity:"high"},
+    {id:"AS03",name:"Password Strength",question:"How strong are your passwords typically?",type:"choice",options:["Very Weak (< 6 chars)","Weak (6-8 chars, simple)","Moderate (8-12 chars, mixed)","Strong (12+ chars, complex)"],scores:[30,20,10,0],severity:"high"},
+    {id:"AS04",name:"Password Manager",question:"Do you use a password manager?",type:"boolean",score_if_true:0,score_if_false:10,severity:"medium"},
+    {id:"AS05",name:"Security Questions",question:"Do you use real personal info for security questions?",type:"boolean",score_if_true:12,score_if_false:0,severity:"medium"}
+  ]},
+  data_exposure:{label:"Data Exposure",weight:0.25,icon:"📡",color:"#ff2d55",rules:[
+    {id:"DE01",name:"Public Social Media",question:"Are your social media profiles set to public?",type:"boolean",score_if_true:18,score_if_false:0,severity:"high"},
+    {id:"DE02",name:"Data Breach History",question:"Have any of your accounts been in a known data breach?",type:"boolean",score_if_true:30,score_if_false:0,severity:"critical"},
+    {id:"DE03",name:"Sensitive Info Sharing",question:"How often do you share sensitive info (DOB, address) online?",type:"choice",options:["Frequently","Sometimes","Rarely","Never"],scores:[25,15,5,0],severity:"high"},
+    {id:"DE04",name:"App Permissions",question:"Do apps have access to contacts, location, camera?",type:"choice",options:["Most apps have all permissions","Some apps, not reviewed","Reviewed and limited","Minimal/No unnecessary permissions"],scores:[20,12,5,0],severity:"medium"},
+    {id:"DE05",name:"Cloud Storage",question:"Do you store sensitive docs unencrypted in cloud?",type:"boolean",score_if_true:20,score_if_false:0,severity:"high"}
+  ]},
+  network_security:{label:"Network Security",weight:0.20,icon:"🌐",color:"#ff6b1a",rules:[
+    {id:"NS01",name:"Public WiFi",question:"Do you use public WiFi for sensitive activities?",type:"boolean",score_if_true:22,score_if_false:0,severity:"high"},
+    {id:"NS02",name:"VPN Usage",question:"Do you use a VPN regularly?",type:"boolean",score_if_true:0,score_if_false:12,severity:"medium"},
+    {id:"NS03",name:"Home Router",question:"Have you changed your home router's default admin password?",type:"boolean",score_if_true:0,score_if_false:15,severity:"high"},
+    {id:"NS04",name:"HTTPS Awareness",question:"Do you check for HTTPS before entering sensitive info?",type:"boolean",score_if_true:0,score_if_false:10,severity:"medium"}
+  ]},
+  device_security:{label:"Device Security",weight:0.15,icon:"💻",color:"#f5c518",rules:[
+    {id:"DS01",name:"Device Encryption",question:"Is your phone/laptop encrypted?",type:"boolean",score_if_true:0,score_if_false:18,severity:"high"},
+    {id:"DS02",name:"Software Updates",question:"How do you handle OS/software updates?",type:"choice",options:["Never update","Update rarely (months late)","Update within weeks","Auto-update immediately"],scores:[25,15,5,0],severity:"critical"},
+    {id:"DS03",name:"Antivirus",question:"Do you have active antivirus on your devices?",type:"boolean",score_if_true:0,score_if_false:12,severity:"medium"},
+    {id:"DS04",name:"Screen Lock",question:"Do all devices have PIN, password, or biometric lock?",type:"boolean",score_if_true:0,score_if_false:15,severity:"high"}
+  ]},
+  behavioral:{label:"Online Behavior",weight:0.10,icon:"🧠",color:"#1bde7a",rules:[
+    {id:"BH01",name:"Phishing Awareness",question:"Can you confidently identify phishing emails/links?",type:"boolean",score_if_true:0,score_if_false:20,severity:"high"},
+    {id:"BH02",name:"Third-Party OAuth",question:"Do you use 'Login with Google/Facebook' on unknown sites?",type:"boolean",score_if_true:15,score_if_false:0,severity:"medium"},
+    {id:"BH03",name:"Privacy Policy",question:"Do you read privacy policies before installing apps?",type:"boolean",score_if_true:0,score_if_false:8,severity:"low"}
+  ]}
+},risk_levels:{
+  critical:{min:75,max:100,label:"CRITICAL RISK",color:"#ff2d55"},
+  high:{min:50,max:74,label:"HIGH RISK",color:"#ff6b1a"},
+  medium:{min:25,max:49,label:"MEDIUM RISK",color:"#f5c518"},
+  low:{min:0,max:24,label:"LOW RISK",color:"#1bde7a"}
+}};
+
+const SCENARIOS={
+  student:{id:"student",label:"Student",icon:"🎓",desc:"College student with moderate social media use & shared devices",
+    context:"Students frequently use public campus WiFi and share devices.",
+    weight_overrides:{account_security:0.25,data_exposure:0.30,network_security:0.22,device_security:0.12,behavioral:0.11},
+    rule_multipliers:{DE01:1.4,NS01:1.3,BH01:1.2,DS04:1.2}},
+  working_professional:{id:"working_professional",label:"Working Professional",icon:"💼",desc:"Corporate employee handling sensitive work data and banking",
+    context:"Professionals handle financial and corporate data — account compromise is disproportionately costly.",
+    weight_overrides:{account_security:0.35,data_exposure:0.20,network_security:0.20,device_security:0.18,behavioral:0.07},
+    rule_multipliers:{AS01:1.5,AS02:1.5,BH01:1.4,DS02:1.3,NS01:1.2}},
+  high_social_media:{id:"high_social_media",label:"Social Media Power User",icon:"📱",desc:"Active on multiple platforms with large public presence",
+    context:"Public social media dramatically increases risk of targeted attacks and doxing.",
+    weight_overrides:{account_security:0.28,data_exposure:0.38,network_security:0.12,device_security:0.12,behavioral:0.10},
+    rule_multipliers:{DE01:1.6,DE03:1.5,DE04:1.4,BH02:1.4,AS01:1.2}},
+  senior_citizen:{id:"senior_citizen",label:"Senior Citizen",icon:"👴",desc:"Older adult using internet for communication, banking, shopping",
+    context:"Senior citizens are disproportionately targeted by phishing and tech-support scams.",
+    weight_overrides:{account_security:0.30,data_exposure:0.20,network_security:0.15,device_security:0.15,behavioral:0.20},
+    rule_multipliers:{BH01:1.8,AS03:1.4,AS01:1.3,DS02:1.3,DS03:1.2}},
+  developer:{id:"developer",label:"Software Developer",icon:"💻",desc:"Tech professional managing code, API keys, cloud infra",
+    context:"Developers often have access to sensitive infrastructure — a compromised account affects entire systems.",
+    weight_overrides:{account_security:0.35,data_exposure:0.22,network_security:0.18,device_security:0.20,behavioral:0.05},
+    rule_multipliers:{AS01:1.6,AS02:1.5,DE05:1.5,DS01:1.4,DS04:1.3}}
+};
+
+const LIVE_EVENTS=[
+  {type:"password_exposure",label:"Password Exposure Alert",icon:"🔓",desc:"One of your passwords was found in a new data breach",risk_delta:18,severity:"critical",mitigatable:true,mitigation:"Change affected password immediately, enable 2FA"},
+  {type:"public_wifi_connect",label:"Public WiFi Connected",icon:"📡",desc:"Device connected to an unsecured public network",risk_delta:12,severity:"high",mitigatable:true,mitigation:"Activate VPN immediately"},
+  {type:"vpn_activated",label:"VPN Activated",icon:"🛡️",desc:"VPN connection established — traffic encrypted",risk_delta:-8,severity:"positive",mitigatable:false,mitigation:""},
+  {type:"app_permission_granted",label:"Sensitive Permission Granted",icon:"📲",desc:"App granted access to Location + Contacts",risk_delta:10,severity:"medium",mitigatable:true,mitigation:"Review and revoke unnecessary app permissions"},
+  {type:"security_update_installed",label:"Security Update Installed",icon:"✅",desc:"OS security patch applied successfully",risk_delta:-10,severity:"positive",mitigatable:false,mitigation:""},
+  {type:"2fa_disabled",label:"2FA Disabled on Account",icon:"⚠️",desc:"Two-factor authentication was turned off on a major account",risk_delta:15,severity:"high",mitigatable:true,mitigation:"Re-enable 2FA on all critical accounts immediately"},
+  {type:"social_media_made_public",label:"Social Profile Made Public",icon:"👁️",desc:"Your social media privacy was changed to public",risk_delta:14,severity:"high",mitigatable:true,mitigation:"Revert profile to private/friends-only"},
+  {type:"phishing_attempt_detected",label:"Phishing Attempt Detected",icon:"🎣",desc:"A suspicious phishing email delivered to your inbox",risk_delta:8,severity:"medium",mitigatable:true,mitigation:"Do not click any links. Report and delete."},
+  {type:"password_manager_enabled",label:"Password Manager Enabled",icon:"🗝️",desc:"User activated a password manager",risk_delta:-8,severity:"positive",mitigatable:false,mitigation:""},
+  {type:"device_screen_lock_disabled",label:"Screen Lock Disabled",icon:"🔓",desc:"Device screen lock was turned off",risk_delta:12,severity:"high",mitigatable:true,mitigation:"Re-enable screen lock with PIN or biometrics"}
+];
+
+const RECS={
+  AS01:{title:"Stop Reusing Passwords",priority:"CRITICAL",short:"Use a unique password for every account.",steps:["Audit all accounts with shared passwords","Install Bitwarden or 1Password","Generate unique passwords per account","Start with email, banking, work"],tools:["Bitwarden","1Password","KeePassXC"],effort:"2–4 hours",impact:"Prevents credential stuffing attacks"},
+  AS02:{title:"Enable Two-Factor Authentication",priority:"HIGH",short:"Add 2FA to all critical accounts.",steps:["Download Authy or Google Authenticator","Enable 2FA on primary email first","Enable on banking, social, work accounts","Store backup codes offline"],tools:["Authy","Google Authenticator","YubiKey"],effort:"1–2 hours",impact:"Blocks 99.9% of automated attacks"},
+  AS03:{title:"Strengthen Your Passwords",priority:"HIGH",short:"Use 12+ char passwords with mixed types.",steps:["Never use dictionary words or names","Use at least 12 characters","Mix upper/lowercase, numbers, symbols","Use password manager to generate"],tools:["Bitwarden generator","Diceware passphrase"],effort:"30 minutes",impact:"Makes brute-force attacks infeasible"},
+  AS04:{title:"Adopt a Password Manager",priority:"MEDIUM",short:"Store and generate passwords securely.",steps:["Choose Bitwarden (free, open-source)","Create a strong master password","Import existing passwords","Install the browser extension"],tools:["Bitwarden","1Password","KeePassXC"],effort:"2 hours setup",impact:"Eliminates password reuse entirely"},
+  AS05:{title:"Use Fake Security Question Answers",priority:"MEDIUM",short:"Treat security questions like passwords.",steps:["Never use real personal info","Generate random fake answers","Store them in your password manager"],tools:["Password manager notes"],effort:"30 minutes",impact:"Defeats social engineering attacks"},
+  DE01:{title:"Restrict Social Media Privacy",priority:"HIGH",short:"Set profiles to private and audit visibility.",steps:["Set all profiles to Friends Only/Private","Remove phone, address, DOB from public","Audit who sees posts and friends list","Enable login alerts on all platforms"],tools:["Facebook Privacy Checkup","Twitter Privacy","Instagram Settings"],effort:"1–2 hours",impact:"Reduces identity theft attack surface"},
+  DE02:{title:"Respond to Data Breaches NOW",priority:"CRITICAL",short:"Act immediately on breached accounts.",steps:["Visit haveibeenpwned.com — check all emails","Change passwords on every breached account","Enable 2FA on breached accounts","Monitor credit report if financial data leaked"],tools:["haveibeenpwned.com","Firefox Monitor","CIBIL"],effort:"1–3 hours urgent",impact:"Critical — credentials sold immediately"},
+  DE03:{title:"Minimize Personal Data Online",priority:"HIGH",short:"Share only what is absolutely necessary.",steps:["Audit where you shared DOB, phone, address","Use email aliases for non-critical signups","Use secondary phone for verifications","Opt out of data broker sites"],tools:["SimpleLogin","DeleteMe"],effort:"3–5 hours",impact:"Reduces your public data footprint"},
+  DE04:{title:"Audit App Permissions",priority:"MEDIUM",short:"Revoke unnecessary app access.",steps:["Android: Settings → Apps → Permissions","iPhone: Settings → Privacy","Revoke location/contacts from unneeded apps","Uninstall unused apps"],tools:["Android Permission Manager","iOS Privacy Settings","Exodus Privacy"],effort:"1 hour",impact:"Prevents background data harvesting"},
+  DE05:{title:"Encrypt Cloud Documents",priority:"HIGH",short:"Never store unencrypted sensitive files in cloud.",steps:["Remove sensitive files from cloud","Use Cryptomator to encrypt before uploading","Use password-protected PDFs for sharing","Enable cloud security alerts"],tools:["Cryptomator","Standard Notes","VeraCrypt"],effort:"2 hours",impact:"Protects data even if cloud is breached"},
+  NS01:{title:"Secure Public WiFi Usage",priority:"HIGH",short:"Never do sensitive activities on public WiFi.",steps:["Install VPN before public WiFi","Avoid banking/shopping on public networks","Use mobile data for sensitive transactions","Forget public networks after use"],tools:["ProtonVPN (free)","Mullvad VPN","Cloudflare WARP"],effort:"15 minutes setup",impact:"Eliminates man-in-the-middle risk"},
+  NS02:{title:"Use a Trustworthy VPN",priority:"MEDIUM",short:"Encrypts traffic and hides your IP.",steps:["Choose no-logs VPN: Mullvad or ProtonVPN","Avoid free VPNs — they sell your data","Enable kill switch","Use on public WiFi always"],tools:["ProtonVPN","Mullvad VPN","Cloudflare WARP"],effort:"30 minutes",impact:"Encrypts traffic, prevents ISP tracking"},
+  NS03:{title:"Secure Your Home Router",priority:"HIGH",short:"Change default credentials, enable WPA3.",steps:["Log into router (192.168.1.1)","Change admin username and password","Set WiFi to WPA3 or WPA2-AES","Disable WPS — has known vulnerabilities"],tools:["Router admin panel","RouterSecurity.org"],effort:"30–45 minutes",impact:"Prevents local network intrusion"},
+  NS04:{title:"Verify HTTPS",priority:"MEDIUM",short:"Check for padlock before entering sensitive info.",steps:["Always check for https:// and padlock","Never enter passwords on HTTP sites","Use HTTPS Everywhere extension"],tools:["HTTPS Everywhere","Browser HTTPS-only mode"],effort:"5 minutes",impact:"Prevents credential theft"},
+  DS01:{title:"Enable Device Encryption",priority:"HIGH",short:"Encrypt devices so data is unreadable if stolen.",steps:["Windows: Enable BitLocker","Mac: Enable FileVault","Store recovery key safely offline"],tools:["BitLocker","FileVault","VeraCrypt"],effort:"1–2 hours",impact:"Protects data on physical theft"},
+  DS02:{title:"Enable Automatic Updates",priority:"CRITICAL",short:"Most breaches exploit patched vulnerabilities.",steps:["Enable auto OS updates on all devices","Enable automatic app updates","Never delay security patch prompts","Update router firmware too"],tools:["Windows Update","Apple Software Update","Linux unattended-upgrades"],effort:"15 minutes",impact:"Closes known security holes"},
+  DS03:{title:"Install Antivirus",priority:"MEDIUM",short:"Active protection against malware.",steps:["Windows: Enable Windows Defender","Mac: Use Malwarebytes free","Keep signatures updated","Run a full scan now"],tools:["Windows Defender","Malwarebytes (free)","Bitdefender"],effort:"30 minutes",impact:"Detects credential-stealing malware"},
+  DS04:{title:"Enable Screen Lock",priority:"HIGH",short:"All devices must require authentication.",steps:["Set 6+ digit PIN, password, or biometric","Set auto-lock to max 2 minutes","Disable notification previews on lock screen","Enable remote wipe"],tools:["Face ID/Touch ID","Android Fingerprint","Windows Hello"],effort:"10 minutes",impact:"Prevents physical access on theft"},
+  BH01:{title:"Improve Phishing Detection",priority:"HIGH",short:"Phishing is #1 cause of data breaches.",steps:["Always check sender email, not display name","Hover over links to see real URL","Suspicious of urgency: 'account will close'","Never give OTPs via email/call","Train: phishingquiz.withgoogle.com"],tools:["Google Phishing Quiz","PhishTank"],effort:"1 hour training",impact:"Eliminates most common breach vector"},
+  BH02:{title:"Audit Third-Party OAuth",priority:"MEDIUM",short:"Revoke access from apps you don't trust.",steps:["Google: myaccount.google.com → Security → Third-party apps","Facebook: Settings → Apps and Websites","Revoke unused or suspicious apps"],tools:["Google Account Security","Facebook App Settings"],effort:"30 minutes",impact:"Removes hidden access to primary accounts"},
+  BH03:{title:"Privacy Policy Awareness",priority:"LOW",short:"Understand what apps collect.",steps:["Use ToS;DR extension for quick summaries","Look for: data selling, third-party sharing","Prefer apps with minimal data collection"],tools:["ToS;DR extension","Privacy Badger"],effort:"Ongoing habit",impact:"Informed consent prevents exposure"}
+};
+
+const RESOURCES=[
+  {name:"Have I Been Pwned",url:"https://haveibeenpwned.com",desc:"Check if email was in a breach"},
+  {name:"EFF Surveillance Self-Defense",url:"https://ssd.eff.org",desc:"Comprehensive privacy guides"},
+  {name:"Privacy Guides",url:"https://www.privacyguides.org",desc:"Privacy tool recommendations"},
+  {name:"Bitwarden",url:"https://bitwarden.com",desc:"Free open-source password manager"},
+  {name:"Google Phishing Quiz",url:"https://phishingquiz.withgoogle.com",desc:"Test your phishing awareness"}
+];
+
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+let responses={};
+let selectedScenario=null;
+let simEnabled=true;
+let histEnabled=true;
+let sessionHistory=JSON.parse(localStorage.getItem('pg_v2_history')||'{}');
+let sessionLog=JSON.parse(localStorage.getItem('pg_v2_log')||'[]');
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+renderScenarios();
+renderQuestions();
+
+/* ══════════════════════════════════════
+   SCENARIOS
+══════════════════════════════════════ */
+function renderScenarios(){
+  const g=document.getElementById('scenario-grid');
+  g.innerHTML='';
+  // Default card
+  const def=document.createElement('div');
+  def.className='scenario-card selected';
+  def.id='sc-default';
+  def.onclick=()=>selectScenario(null);
+  def.innerHTML=`<div class="sc-icon">⚖️</div><div class="sc-label">Default</div><div class="sc-desc">Standard equal-weight scoring</div>`;
+  g.appendChild(def);
+  for(const[sid,s] of Object.entries(SCENARIOS)){
+    const c=document.createElement('div');
+    c.className='scenario-card';
+    c.id=`sc-${sid}`;
+    c.onclick=()=>selectScenario(sid);
+    c.innerHTML=`<div class="sc-icon">${s.icon}</div><div class="sc-label">${s.label}</div><div class="sc-desc">${s.desc}</div>`;
+    g.appendChild(c);
+  }
+}
+function selectScenario(sid){
+  selectedScenario=sid;
+  document.querySelectorAll('.scenario-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById(sid?`sc-${sid}`:'sc-default').classList.add('selected');
+  const note=document.getElementById('scenario-note');
+  if(sid){
+    note.textContent='💡 '+SCENARIOS[sid].context;
+    note.style.display='block';
+  } else {
+    note.style.display='none';
+  }
+  updateLiveScore();
+}
+
+function toggleSim(){const t=document.getElementById('tog-sim');t.classList.toggle('on');simEnabled=t.classList.contains('on')}
+function toggleHist(){const t=document.getElementById('tog-hist');t.classList.toggle('on');histEnabled=t.classList.contains('on')}
+
+/* ══════════════════════════════════════
+   RENDER QUESTIONS
+══════════════════════════════════════ */
+function renderQuestions(){
+  const c=document.getElementById('q-container');c.innerHTML='';
+  let idx=0;
+  for(const[cid,cat] of Object.entries(RULES.categories)){
+    const b=document.createElement('div');
+    b.className='cat-block'+(idx===0?' open':'');
+    b.id=`cb-${cid}`;
+    b.innerHTML=`
+      <div class="cat-hdr" onclick="toggleCat('${cid}')">
+        <div class="cat-left">
+          <div class="cat-ic" style="background:${cat.color}22;color:${cat.color}">${cat.icon}</div>
+          <div><div class="cat-nm">${cat.label}</div><div class="cat-meta">${cat.rules.length} questions · weight ${Math.round(cat.weight*100)}%</div></div>
+        </div>
+        <div class="cat-right">
+          <div class="prog-wrap"><div class="prog-fill" id="pf-${cid}" style="width:0%"></div></div>
+          <span class="prog-txt" id="pt-${cid}">0/${cat.rules.length}</span>
+          <span class="chev">▾</span>
+        </div>
+      </div>
+      <div class="q-panel" id="qp-${cid}">${cat.rules.map(r=>renderQ(r,cid)).join('')}</div>`;
+    c.appendChild(b);idx++;
+  }
+}
+function renderQ(rule,cid){
+  let inp='';
+  if(rule.type==='boolean'){
+    inp=`<div class="bool-row">
+      <button class="bb" id="by-${rule.id}" onclick="setB('${rule.id}','${cid}',true)">✓ Yes</button>
+      <button class="bb" id="bn-${rule.id}" onclick="setB('${rule.id}','${cid}',false)">✗ No</button>
+    </div>`;
+  }else{
+    const opts=rule.options.map((o,i)=>`<option value="${i}">${o}</option>`).join('');
+    inp=`<select class="csel" id="sl-${rule.id}" onchange="setC('${rule.id}','${cid}',this.value)"><option value="">— Select —</option>${opts}</select>`;
+  }
+  return `<div class="q-item"><div class="q-text"><span class="qid">${rule.id}</span><span>${rule.question}</span><span class="sev sev-${rule.severity}">${rule.severity}</span></div>${inp}</div>`;
+}
+function toggleCat(cid){document.getElementById(`cb-${cid}`).classList.toggle('open')}
+function setB(id,cid,v){
+  responses[id]=v;
+  const y=document.getElementById(`by-${id}`),n=document.getElementById(`bn-${id}`);
+  y.className='bb'+(v?' sel-y':'');n.className='bb'+(!v?' sel-n':'');
+  updateProgress(cid);updateLiveScore();
+}
+function setC(id,cid,v){
+  if(v==='')delete responses[id];else responses[id]=parseInt(v);
+  updateProgress(cid);updateLiveScore();
+}
+function updateProgress(cid){
+  const cat=RULES.categories[cid],ans=cat.rules.filter(r=>responses[r.id]!==undefined).length;
+  const pct=(ans/cat.rules.length)*100;
+  document.getElementById(`pf-${cid}`).style.width=pct+'%';
+  document.getElementById(`pt-${cid}`).textContent=`${ans}/${cat.rules.length}`;
+}
+
+/* ══════════════════════════════════════
+   SCORING ENGINE
+══════════════════════════════════════ */
+function scoreRule(rule,ans){
+  if(rule.type==='boolean'){
+    const m=Math.max(rule.score_if_true,rule.score_if_false);
+    if(ans===undefined||ans===null)return{s:0,m};
+    return{s:ans?rule.score_if_true:rule.score_if_false,m};
+  }
+  if(rule.type==='choice'){
+    const m=Math.max(...rule.scores);
+    if(ans===undefined||ans===null||ans==='')return{s:0,m};
+    return{s:rule.scores[parseInt(ans)]||0,m};
+  }
+  return{s:0,m:0};
+}
+function classify(score){
+  for(const[id,lvl] of Object.entries(RULES.risk_levels))
+    if(score>=lvl.min&&score<=lvl.max)return{id,label:lvl.label,color:lvl.color};
+  return{id:'low',label:'LOW RISK',color:'#1bde7a'};
+}
+function grade(s){if(s>=75)return'F';if(s>=50)return'D';if(s>=35)return'C';if(s>=20)return'B';return'A';}
+
+function calculateScore(scId=null){
+  const scenario=scId?SCENARIOS[scId]:null;
+  const wOvr=scenario?.weight_overrides||{};
+  const mults=scenario?.rule_multipliers||{};
+  let finalScore=0;
+  const catScores={};const ruleDetails=[];
+
+  for(const[cid,cat] of Object.entries(RULES.categories)){
+    let raw=0,maxP=0;
+    for(const rule of cat.rules){
+      let{s,m}=scoreRule(rule,responses[rule.id]);
+      if(mults[rule.id]&&s>0)s=Math.min(s*mults[rule.id],m);
+      raw+=s;maxP+=m;
+      ruleDetails.push({rule_id:rule.id,rule_name:rule.name,category:cat.label,raw_score:s,max_possible:m,severity:rule.severity});
+    }
+    const w=wOvr[cid]??cat.weight;
+    const norm=maxP>0?(raw/maxP)*100:0;
+    catScores[cid]={label:cat.label,normalized:Math.round(norm),weight:w,
+      originalWeight:cat.weight,weighted:norm*w,color:cat.color,weightChanged:Math.abs(w-cat.weight)>0.001};
+    finalScore+=norm*w;
+  }
+  finalScore=Math.min(100,Math.round(finalScore*10)/10);
+  return{final_score:finalScore,category_scores:catScores,rule_details:ruleDetails,risk_level:classify(finalScore)};
+}
+
+function updateLiveScore(){
+  const r=calculateScore(selectedScenario);
+  const s=r.final_score,lvl=r.risk_level;
+  const sticky=document.getElementById('sticky');sticky.style.display='block';
+  document.getElementById('sk-num').textContent=Math.round(s);
+  document.getElementById('sk-num').style.color=lvl.color;
+  document.getElementById('sk-lvl').textContent=lvl.label;
+  document.getElementById('sk-lvl').style.color=lvl.color;
+  document.getElementById('sk-fill').style.width=s+'%';
+  document.getElementById('sk-fill').style.background=lvl.color;
+}
+
+/* ══════════════════════════════════════
+   RECOMMENDATIONS
+══════════════════════════════════════ */
+function getRecommendations(ruleDetails){
+  const PO={CRITICAL:0,HIGH:1,MEDIUM:2,LOW:3};
+  const triggered=[];
+  for(const rd of ruleDetails){
+    if(rd.raw_score>0){
+      const rec=RECS[rd.rule_id];
+      if(rec)triggered.push({...rec,rule_id:rd.rule_id,category:rd.category,severity:rd.severity,contribution:rd.raw_score});
+    }
+  }
+  return triggered.sort((a,b)=>(PO[a.priority]??99)-(PO[b.priority]??99)||b.contribution-a.contribution);
+}
+
+/* ══════════════════════════════════════
+   LIVE SIMULATION
+══════════════════════════════════════ */
+function generateEvents(count=3){
+  const shuffled=[...LIVE_EVENTS].sort(()=>Math.random()-0.5);
+  return shuffled.slice(0,count).map((e,i)=>({...e,id:`EVT_${i}`}));
+}
+function applyEvents(baseScore,events){
+  let score=baseScore;const timeline=[];
+  for(const e of events){
+    const prev=score;
+    score=Math.max(0,Math.min(100,score+e.risk_delta));
+    timeline.push({...e,before:Math.round(prev),after:Math.round(score)});
+  }
+  return{base:Math.round(baseScore),live:Math.round(score),delta:Math.round(score-baseScore),timeline};
+}
+
+/* ══════════════════════════════════════
+   HISTORY & TREND
+══════════════════════════════════════ */
+function recordHistory(userKey,score,catScores){
+  if(!sessionHistory[userKey])sessionHistory[userKey]=[];
+  sessionHistory[userKey].push({
+    ts:new Date().toISOString(),score:Math.round(score),
+    cats:Object.fromEntries(Object.entries(catScores).map(([k,v])=>[k,v.normalized]))
+  });
+  if(sessionHistory[userKey].length>30)sessionHistory[userKey]=sessionHistory[userKey].slice(-30);
+  localStorage.setItem('pg_v2_history',JSON.stringify(sessionHistory));
+}
+function compareHistory(userKey){
+  const h=sessionHistory[userKey]||[];
+  if(h.length<2)return{has_previous:false};
+  const cur=h[h.length-1],prev=h[h.length-2];
+  const delta=cur.score-prev.score;
+  const catDeltas={};
+  for(const k in cur.cats)catDeltas[k]=Math.round((cur.cats[k]||0)-(prev.cats[k]||0));
+  let dir='stable',emoji='➡️',lbl='No Significant Change';
+  if(delta<=-10){dir='improved';emoji='📈';lbl='Significant Improvement';}
+  else if(delta<=-3){dir='improved';emoji='↗️';lbl='Slight Improvement';}
+  else if(delta>=10){dir='degraded';emoji='📉';lbl='Significant Degradation';}
+  else if(delta>=3){dir='degraded';emoji='↘️';lbl='Slight Degradation';}
+  return{has_previous:true,prev_score:prev.score,curr_score:cur.score,delta,dir,emoji,lbl,catDeltas};
+}
+function analyzeTrend(userKey){
+  const h=sessionHistory[userKey]||[];
+  if(h.length<2)return{has_trend:false};
+  const scores=h.map(e=>e.score);
+  const n=scores.length,xm=(n-1)/2,ym=scores.reduce((a,b)=>a+b)/n;
+  const num=scores.reduce((s,y,i)=>s+(i-xm)*(y-ym),0);
+  const den=scores.reduce((s,_,i)=>s+(i-xm)**2,0);
+  const slope=den?num/den:0;
+  let dir,lbl;
+  if(slope>1.5){dir='worsening';lbl='📉 Risk Worsening';}
+  else if(slope>0.3){dir='slightly_worsening';lbl='↘️ Slightly Worsening';}
+  else if(slope<-1.5){dir='improving';lbl='📈 Improving';}
+  else if(slope<-0.3){dir='slightly_improving';lbl='↗️ Slightly Improving';}
+  else{dir='stable';lbl='➡️ Stable';}
+  const ma=scores.map((_,i)=>{const sl=Math.max(0,i-2);return Math.round(scores.slice(sl,i+1).reduce((a,b)=>a+b)/( i-sl+1));});
+  const catTrends={};
+  if(h[0].cats){
+    for(const k of Object.keys(h[0].cats)){
+      const cs=h.map(e=>e.cats[k]||0);
+      const d=cs[cs.length-1]-cs[0];
+      catTrends[k]={delta:Math.round(d),dir:d<-5?'improving':d>5?'worsening':'stable'};
+    }
+  }
+  return{has_trend:true,scores,ma,dir,lbl,overall_delta:Math.round(scores[scores.length-1]-scores[0]),peak:Math.max(...scores),trough:Math.min(...scores),catTrends,count:scores.length};
+}
+
+/* ══════════════════════════════════════
+   MAIN ANALYSIS
+══════════════════════════════════════ */
+function runAnalysis(){
+  const total=Object.values(RULES.categories).reduce((s,c)=>s+c.rules.length,0);
+  const ans=Object.keys(responses).length;
+  if(ans<Math.ceil(total*0.5)){alert(`Please answer at least ${Math.ceil(total*0.5)} questions (answered: ${ans}/${total}).`);return;}
+
+  const sr=calculateScore(selectedScenario);
+  const baseSR=selectedScenario?calculateScore(null):sr;
+  const recs=getRecommendations(sr.rule_details);
+  const name=document.getElementById('uname').value.trim()||'Anonymous';
+  const userKey=name.toLowerCase().replace(/\s+/g,'_');
+  const g=grade(sr.final_score);
+
+  if(histEnabled)recordHistory(userKey,sr.final_score,sr.category_scores);
+  const comparison=compareHistory(userKey);
+  const trend=analyzeTrend(userKey);
+
+  let liveData=null;
+  if(simEnabled){
+    const events=generateEvents(4);
+    liveData=applyEvents(sr.final_score,events);
+  }
+
+  sessionLog.unshift({name,score:sr.final_score,risk:sr.risk_level.label,scenario:selectedScenario||'default',ts:new Date().toISOString()});
+  if(sessionLog.length>25)sessionLog.pop();
+  localStorage.setItem('pg_v2_log',JSON.stringify(sessionLog));
+
+  document.getElementById('form-section').style.display='none';
+  const rv=document.getElementById('view-results');
+  rv.style.display='block';
+  rv.innerHTML=buildResults(name,sr,baseSR,recs,g,comparison,trend,liveData,ans,total);
+  rv.scrollIntoView({behavior:'smooth'});
+
+  setTimeout(()=>{
+    animateScore(sr.final_score,sr.risk_level.color);
+    animateBars();
+    renderCharts(sr);
+  },120);
+}
+
+/* ══════════════════════════════════════
+   BUILD RESULTS HTML
+══════════════════════════════════════ */
+function buildResults(name,sr,baseSR,recs,g,cmp,trend,liveData,ans,total){
+  const rl=sr.risk_level;
+  const gc={A:'#1bde7a',B:'#1bde7a',C:'#f5c518',D:'#ff6b1a',F:'#ff2d55'}[g];
+  const crit=recs.filter(r=>r.priority==='CRITICAL').length;
+  const high=recs.filter(r=>r.priority==='HIGH').length;
+  const scen=selectedScenario?SCENARIOS[selectedScenario]:null;
+
+  // COMPARISON BANNER
+  let cmpHtml='';
+  if(cmp.has_previous){
+    const isgood=cmp.dir==='improved';
+    const bg=isgood?'var(--lob)':'var(--crb)';
+    const bc=isgood?'var(--lo)':'var(--cr)';
+    const sign=cmp.delta>0?'+':'';
+    cmpHtml=`<div class="compare-banner animate-in" style="background:${bg};border:1px solid ${bc}">
+      <div class="cmp-icon">${cmp.emoji}</div>
+      <div class="cmp-text"><div class="cmp-title">${cmp.lbl}</div>
+        <div class="cmp-sub">Previous: ${cmp.prev_score} → Current: ${cmp.curr_score} · ${Math.abs(cmp.delta)} point ${isgood?'improvement':'increase'}</div>
+      </div>
+      <div class="cmp-delta" style="color:${bc}">${sign}${cmp.delta}</div>
+    </div>`;
+  }
+
+  // TREND PANEL
+  let trendHtml='';
+  if(trend.has_trend){
+    const bars=trend.scores.map((s,i)=>{
+      const maxS=trend.peak||100;
+      const ht=Math.max(4,Math.round((s/100)*60));
+      const isLast=i===trend.scores.length-1;
+      const clr=isLast?rl.color:'var(--s4)';
+      return `<div class="bar-c" style="height:${ht}px;background:${clr};flex:1;border-radius:3px 3px 0 0" data-val="${s}"></div>`;
+    }).join('');
+    const trendColor=trend.dir.includes('improving')?'var(--lo)':trend.dir.includes('worsening')?'var(--cr)':'var(--me)';
+    const catTrendRows=Object.entries(trend.catTrends).map(([k,t])=>{
+      const cat=RULES.categories[k];if(!cat)return'';
+      const arrow=t.dir==='improving'?'↘️':t.dir==='worsening'?'↗️':'➡️';
+      const dc=t.dir==='improving'?'var(--lo)':t.dir==='worsening'?'var(--cr)':'var(--tx3)';
+      const sign=t.delta>0?'+':'';
+      return `<div class="tcat-row"><span class="tcat-arrow">${arrow}</span><span class="tcat-name">${cat.label}</span><span class="tcat-delta" style="color:${dc}">${sign}${t.delta}%</span></div>`;
+    }).join('');
+    trendHtml=`<div class="trend-panel animate-in">
+      <div class="trend-hdr">
+        <span style="font-weight:600;font-size:0.9rem">📈 Risk Trend Analysis</span>
+        <span class="trend-lbl" style="background:${trendColor}22;color:${trendColor}">${trend.lbl}</span>
+      </div>
+      <div style="font-size:0.82rem;color:var(--tx2);margin-bottom:0.75rem">${trend.count} assessments · Overall Δ: <strong style="color:${trendColor}">${trend.overall_delta>0?'+':''}${trend.overall_delta}</strong> · Peak: ${trend.peak} · Trough: ${trend.trough}</div>
+      <div class="mini-chart">${bars}</div>
+      <div class="trend-cats">${catTrendRows}</div>
+    </div>`;
+  }
+
+  // LIVE SIMULATION PANEL
+  let simHtml='';
+  if(liveData){
+    const dc=liveData.delta>0?'var(--cr)':'var(--lo)';
+    const sign=liveData.delta>0?'+':'';
+    const evRows=liveData.timeline.map(e=>{
+      const ec=e.risk_delta>0?'var(--cr)':'var(--lo)';
+      const sign2=e.risk_delta>0?'+':'';
+      return `<div class="event-row">
+        <span class="ev-icon">${e.icon}</span>
+        <div class="ev-info">
+          <div class="ev-label">${e.label}</div>
+          <div class="ev-desc">${e.desc}</div>
+          ${e.mitigatable?`<div class="ev-mitigation">→ ${e.mitigation}</div>`:''}
+          <div class="ev-arrow"><span style="color:var(--tx3)">${e.before}</span><span style="color:var(--tx3)"> → </span><span style="color:${ec};font-weight:600">${e.after}</span></div>
+        </div>
+        <div class="ev-delta" style="color:${ec}">${sign2}${e.risk_delta}</div>
+      </div>`;
+    }).join('');
+    simHtml=`<div class="sim-panel animate-in">
+      <div class="sim-hdr">
+        <div class="sim-title"><div class="sim-live-dot"></div>Live Environment Events</div>
+        <div>
+          <span style="font-family:var(--fm);font-size:11px;color:var(--tx3)">Base: ${liveData.base} → Live: </span>
+          <span class="sim-score-change" style="color:${dc}">${liveData.live}</span>
+          <span style="font-family:var(--fm);font-size:11px;color:${dc};margin-left:4px">(${sign}${liveData.delta})</span>
+        </div>
+      </div>
+      ${evRows}
+    </div>`;
+  }
+
+  // CATEGORY BREAKDOWN
+  const catRows=Object.entries(sr.category_scores).map(([cid,c])=>{
+    const wc=c.weightChanged?`<span class="catb-changed">scenario: ${Math.round(c.weight*100)}%</span>`:'';
+    return `<div class="catb-row">
+      <div class="catb-nm">${c.label}${wc}</div>
+      <div class="catb-bar"><div class="catb-fill" data-v="${c.normalized}" style="width:0%;background:${c.color}"></div></div>
+      <div class="catb-val" style="color:${c.color}">${c.normalized}%</div>
+      <div class="catb-w">${Math.round(c.weight*100)}%</div>
+    </div>`;
+  }).join('');
+
+  // SCENARIO INFO
+  let scenBadge='';
+  if(scen){
+    const bdelta=Math.round(sr.final_score-baseSR.final_score);
+    const sign=bdelta>0?'+':'';
+    scenBadge=`<div class="scenario-badge">${scen.icon} ${scen.label} Profile Applied</div>
+      <div class="base-delta">Baseline: ${Math.round(baseSR.final_score)} → Scenario-adjusted: ${Math.round(sr.final_score)} (${sign}${bdelta})</div>`;
+  }
+
+  // RECS
+  const recsHtml=recs.length===0
+    ?`<div style="text-align:center;padding:2rem;color:var(--lo);font-family:var(--fm);font-size:13px">✓ No major risk factors identified.</div>`
+    :recs.map((r,i)=>`
+    <div class="rec-card" id="rc-${i}" onclick="toggleRec(${i})">
+      <div class="rec-hdr">
+        <span class="rec-pri sev-${r.priority.toLowerCase()}">${r.priority}</span>
+        <span class="rec-ttl">${r.title}</span>
+        <span class="rec-chev">▾</span>
+      </div>
+      <div class="rec-body">
+        <p class="rec-short">${r.short}</p>
+        <ol class="rec-steps">${r.steps.map((s,j)=>`<li><span class="snum">0${j+1}</span><span>${s}</span></li>`).join('')}</ol>
+        <div class="tools">${r.tools.map(t=>`<span class="tool">${t}</span>`).join('')}</div>
+        <div class="rec-meta"><span>⏱ ${r.effort}</span><span>💡 ${r.impact}</span></div>
+      </div>
+    </div>`).join('');
+
+  const resHtml=RESOURCES.map(res=>`<a href="${res.url}" target="_blank" rel="noopener" class="res-a"><div class="res-nm">${res.name}</div><div class="res-d">${res.desc}</div></a>`).join('');
+
+  return `<div class="animate-in">
+    <div class="res-hero" style="--score-glow:${rl.color}22">
+      <div class="res-name">${name} · ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} · ${ans}/${total} answered</div>
+      <div class="big-num" id="anim-score" style="color:${rl.color}">0</div>
+      <div class="big-lvl" style="background:${rl.color}22;color:${rl.color}">${rl.label}</div><br>
+      <div class="grade-ring" style="background:${gc}22;color:${gc}">${g}</div>
+      <div class="grade-hint">Privacy Grade</div>
+      ${scenBadge}
+    </div>
+
+    ${cmpHtml}
+
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-v" style="color:var(--cr)">${crit}</div><div class="stat-l">Critical Issues</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:var(--hi)">${high}</div><div class="stat-l">High Priority</div></div>
+      <div class="stat-card"><div class="stat-v">${recs.length}</div><div class="stat-l">Total Actions</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:var(--a2)">${ans}</div><div class="stat-l">Answered</div></div>
+    </div>
+
+    ${trendHtml}
+    ${simHtml}
+
+    <div class="section-head" style="margin-top:1.25rem">Risk by Category</div>
+    <div class="cat-bd">${catRows}</div>
+
+    <div class="chart-panel">
+      <div class="section-head" style="margin-bottom:1rem">Visual Dashboard</div>
+      <div class="chart-row">
+        <div class="chart-box"><canvas id="chart-bar"></canvas></div>
+        <div class="chart-box"><canvas id="chart-pie"></canvas></div>
+      </div>
+    </div>
+
+    <div class="section-head" style="margin-top:1.25rem">Remediation Plan (${recs.length} actions)</div>
+    ${recsHtml}
+
+    <div class="section-head" style="margin-top:1.5rem">Privacy Resources</div>
+    <div class="res-grid">${resHtml}</div>
+
+    <div style="text-align:center;padding:1rem 0 2rem">
+      <button class="btn-ghost" onclick="retake()">↩ Retake Assessment</button>
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════
+   CHARTS (Chart.js)
+══════════════════════════════════════ */
+function renderCharts(sr){
+  const cats=Object.values(sr.category_scores);
+  const labels=cats.map(c=>c.label);
+  const data=cats.map(c=>c.normalized);
+  const colors=cats.map(c=>c.color);
+
+  const chartDefaults={
+    color:'rgba(255,255,255,0.7)',
+    plugins:{legend:{labels:{color:'rgba(255,255,255,0.6)',font:{family:"'IBM Plex Mono',monospace",size:11}}}},
+    scales:{x:{ticks:{color:'rgba(255,255,255,0.5)',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},
+            y:{ticks:{color:'rgba(255,255,255,0.5)'},grid:{color:'rgba(255,255,255,0.04)'},min:0,max:100}}
+  };
+
+  // BAR CHART
+  const ctxB=document.getElementById('chart-bar');
+  if(ctxB){new Chart(ctxB,{type:'bar',data:{labels,datasets:[{label:'Risk Score (%)',data,backgroundColor:colors.map(c=>c+'66'),borderColor:colors,borderWidth:1.5,borderRadius:5}]},
+    options:{...chartDefaults,plugins:{...chartDefaults.plugins,title:{display:true,text:'Category Risk Scores',color:'rgba(255,255,255,0.7)',font:{size:12,family:"'IBM Plex Mono',monospace"}}}}});}
+
+  // PIE CHART
+  const ctxP=document.getElementById('chart-pie');
+  if(ctxP){new Chart(ctxP,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors.map(c=>c+'99'),borderColor:colors,borderWidth:1.5,hoverOffset:8}]},
+    options:{maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,0.6)',font:{size:10},padding:8}},title:{display:true,text:'Risk Distribution',color:'rgba(255,255,255,0.7)',font:{size:12,family:"'IBM Plex Mono',monospace"}}}}});}
+}
+
+/* ══════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════ */
+function animateScore(target,color){
+  const el=document.getElementById('anim-score');if(!el)return;
+  let cur=0;const step=target/60;
+  const iv=setInterval(()=>{
+    cur=Math.min(cur+step,target);el.textContent=Math.round(cur);
+    if(cur>=target)clearInterval(iv);
+  },16);
+}
+function animateBars(){
+  setTimeout(()=>{
+    document.querySelectorAll('.catb-fill').forEach(b=>{b.style.transition='width 0.8s ease';b.style.width=b.dataset.v+'%';});
+  },200);
+}
+function toggleRec(i){document.getElementById(`rc-${i}`).classList.toggle('open')}
+function retake(){
+  document.getElementById('view-results').style.display='none';
+  document.getElementById('form-section').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ══════════════════════════════════════
+   ADMIN / ANALYTICS
+══════════════════════════════════════ */
+function renderAdmin(){
+  const el=document.getElementById('view-admin');
+  const avg=sessionLog.length?Math.round(sessionLog.reduce((s,l)=>s+l.score,0)/sessionLog.length):0;
+  const highestRisk=sessionLog.length?Math.max(...sessionLog.map(l=>l.score)):0;
+  const scenCounts={};
+  sessionLog.forEach(l=>{scenCounts[l.scenario]=(scenCounts[l.scenario]||0)+1;});
+
+  const sessRows=sessionLog.slice(0,12).map(s=>`
+    <div class="sess-row">
+      <div>
+        <div style="font-weight:500;font-size:0.85rem">${s.name}</div>
+        <div style="font-family:var(--fm);font-size:10px;color:var(--tx3)">${new Date(s.ts).toLocaleDateString('en-IN')} · ${s.scenario}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="sess-score" style="color:${classify(s.score).color}">${Math.round(s.score)}</div>
+        <div style="font-family:var(--fm);font-size:10px;color:var(--tx3)">${s.risk}</div>
+      </div>
+    </div>`).join('')||'<div style="color:var(--tx3);padding:1rem;font-size:0.85rem">No sessions yet.</div>';
+
+  const scenBreakdown=Object.entries(scenCounts).map(([s,c])=>`
+    <div class="sess-row">
+      <div style="font-size:0.85rem">${s==='default'?'⚖️ Default':SCENARIOS[s]?.icon+' '+SCENARIOS[s]?.label||s}</div>
+      <div style="font-family:var(--fm);font-size:13px;color:var(--a2)">${c} assessment${c!==1?'s':''}</div>
+    </div>`).join('')||'<div style="color:var(--tx3);padding:0.75rem;font-size:0.85rem">No data yet.</div>';
+
+  const allUsers=Object.keys(sessionHistory);
+  const userHistRows=allUsers.map(u=>{
+    const h=sessionHistory[u];const latest=h[h.length-1];
+    const t=analyzeTrend(u);
+    return `<div class="sess-row">
+      <div>
+        <div style="font-weight:500;font-size:0.85rem">${u}</div>
+        <div style="font-family:var(--fm);font-size:10px;color:var(--tx3)">${h.length} assessments · ${t.has_trend?t.lbl:'First assessment'}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="sess-score" style="color:${classify(latest.score).color}">${latest.score}</div>
+      </div>
+    </div>`;
+  }).join('')||'<div style="color:var(--tx3);padding:0.75rem;font-size:0.85rem">No history tracked yet.</div>';
+
+  el.innerHTML=`
+    <div style="padding:1.5rem 0 1rem">
+      <h2 style="font-family:var(--fd);font-size:1.8rem;letter-spacing:0.05em;margin-bottom:0.25rem">ANALYTICS DASHBOARD</h2>
+      <p style="color:var(--tx2);font-size:0.88rem">Assessment history, trends, and system overview</p>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-v" style="color:var(--a2)">${sessionLog.length}</div><div class="stat-l">Total Assessments</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:${classify(avg).color}">${avg}</div><div class="stat-l">Average Score</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:var(--cr)">${highestRisk}</div><div class="stat-l">Peak Risk Score</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:var(--tx)">${allUsers.length}</div><div class="stat-l">Unique Users</div></div>
+    </div>
+
+    <div class="admin-card">
+      <h3>Recent Assessment Sessions</h3>${sessRows}
+    </div>
+    <div class="admin-card">
+      <h3>Scenario Usage Breakdown</h3>${scenBreakdown}
+    </div>
+    <div class="admin-card">
+      <h3>User History & Trends</h3>${userHistRows}
+    </div>
+    <div class="admin-card">
+      <h3>System Overview</h3>
+      <div class="sess-row"><span style="font-size:0.85rem">Engine Version</span><span style="font-family:var(--fm);font-size:12px;color:var(--a2)">2.1.0 / UI 2.0</span></div>
+      <div class="sess-row"><span style="font-size:0.85rem">Total Rules Loaded</span><span style="font-family:var(--fm);font-size:12px">${Object.values(RULES.categories).reduce((s,c)=>s+c.rules.length,0)}</span></div>
+      <div class="sess-row"><span style="font-size:0.85rem">Scenario Profiles</span><span style="font-family:var(--fm);font-size:12px">${Object.keys(SCENARIOS).length}</span></div>
+      <div class="sess-row"><span style="font-size:0.85rem">Live Event Types</span><span style="font-family:var(--fm);font-size:12px">${LIVE_EVENTS.length}</span></div>
+      <div class="sess-row"><span style="font-size:0.85rem">Architecture</span><span style="font-family:var(--fm);font-size:12px;color:var(--tx2)">Rule-Based · Scenario-Aware · Event-Driven</span></div>
+    </div>`;
+}
+
+function switchView(v){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(`view-${v}`).classList.add('active');
+  document.getElementById(`t-${v==='checker'?'check':'admin'}`).classList.add('active');
+  if(v==='admin')renderAdmin();
+}
+</script>
+</body>
+</html>

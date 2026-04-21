@@ -1,0 +1,25 @@
+{
+  "pranav": [
+    {
+      "timestamp": "2026-04-01T10:33:48.990134",
+      "score": 0,
+      "risk_label": "LOW",
+      "scenario": "student",
+      "category_scores": {}
+    },
+    {
+      "timestamp": "2026-04-01T10:34:55.011770",
+      "score": 0,
+      "risk_label": "LOW",
+      "scenario": "student",
+      "category_scores": {}
+    },
+    {
+      "timestamp": "2026-04-16T15:17:15.595245",
+      "score": 0,
+      "risk_label": "LOW",
+      "scenario": "student",
+      "category_scores": {}
+    }
+  ]
+}

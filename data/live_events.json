@@ -1,0 +1,22 @@
+{
+  "event_types": {
+    "password_exposure": {
+      "label": "Password Exposure Alert",
+      "description": "Your password was found in a breach",
+      "risk_delta": 10,
+      "severity": "high"
+    },
+    "public_wifi": {
+      "label": "Connected to Public WiFi",
+      "description": "Using unsecured network",
+      "risk_delta": 5,
+      "severity": "medium"
+    },
+    "vpn_enabled": {
+      "label": "VPN Enabled",
+      "description": "Secure connection established",
+      "risk_delta": -5,
+      "severity": "low"
+    }
+  }
+}

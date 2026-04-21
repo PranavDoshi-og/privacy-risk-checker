@@ -1,0 +1,10 @@
+[
+  { "id": "AS01", "weight": 10 },
+  { "id": "AS02", "weight": 8 },
+  { "id": "AS03", "weight": 6 },
+  { "id": "DE01", "weight": 9 },
+  { "id": "DE02", "weight": 7 },
+  { "id": "NS01", "weight": 8 },
+  { "id": "DS02", "weight": 6 },
+  { "id": "BH01", "weight": 5 }
+]
